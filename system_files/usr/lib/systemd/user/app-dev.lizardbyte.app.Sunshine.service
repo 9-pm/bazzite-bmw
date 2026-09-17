@@ -1,0 +1,21 @@
+[Unit]
+Description=Self-hosted game stream host for Moonlight
+StartLimitIntervalSec=500
+StartLimitBurst=5
+After=graphical-session.target xdg-desktop-autostart.target xdg-desktop-portal.service
+# The Flatpak is installed on first boot by bazzite-custom-flatpaks.service.
+# On a brand new install it may not exist yet at the first login; Restart=
+# below covers that, and it works from the next login at the latest.
+ConditionPathExistsGlob=|/var/lib/flatpak/app/dev.lizardbyte.app.Sunshine
+
+[Service]
+# Avoid starting Sunshine before the desktop is fully initialized.
+ExecStartPre=/bin/sleep 5
+ExecStart=flatpak run --command=sunshine dev.lizardbyte.app.Sunshine
+ExecStop=flatpak kill dev.lizardbyte.app.Sunshine
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=graphical-session.target
+Alias=sunshine.service

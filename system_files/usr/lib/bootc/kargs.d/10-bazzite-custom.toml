@@ -1,0 +1,14 @@
+# Kernel arguments baked into the image.
+#
+# bluetooth.disable_ertm=1 disables Enhanced Retransmission Mode. It is the
+# standard fix for game controllers (DualShock/DualSense, Xbox) that pair but
+# then fail to connect over Bluetooth. It was present on the machine this image
+# was built from, so it is carried over here.
+#
+# NOT verified: that bootc reads this path and format in the version shipped
+# with Bazzite 44. Check after the first boot with:
+#     rpm-ostree kargs
+# If the argument is missing, apply it once by hand instead:
+#     sudo rpm-ostree kargs --append=bluetooth.disable_ertm=1
+
+kargs = ["bluetooth.disable_ertm=1"]

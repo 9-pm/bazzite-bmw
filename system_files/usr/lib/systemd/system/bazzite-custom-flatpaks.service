@@ -1,0 +1,15 @@
+[Unit]
+Description=Install image-defined Flatpaks
+Documentation=https://github.com/ublue-os/image-template
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/usr/share/bazzite-custom/flatpaks.list
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/libexec/bazzite-custom/install-flatpaks.sh
+TimeoutStartSec=infinity
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,48 @@
+# Flatpaks installed system-wide on first boot by bazzite-custom-flatpaks.service.
+# One Flathub application ID per line. Lines starting with # are ignored.
+#
+# Taken from: flatpak list --app --columns=application  (17.09.2026)
+# Note: everything here is installed --system, even if it was a --user install
+# before. That is intentional for an image-defined baseline.
+
+# --- browsers & communication ---
+com.brave.Browser
+org.torproject.torbrowser-launcher
+com.discordapp.Discord
+com.teamspeak.TeamSpeak
+
+# --- gaming ---
+com.heroicgameslauncher.hgl
+com.vysp3r.ProtonPlus
+com.github.Matoking.protontricks
+io.github.radiolamp.mangojuice
+org.libretro.RetroArch
+
+# --- streaming / media ---
+dev.lizardbyte.app.Sunshine
+tv.kodi.Kodi
+org.videolan.VLC
+org.kde.haruna
+com.makemkv.MakeMKV
+com.spotify.Client
+com.rafaelmardojai.Blanket
+com.github.wwmm.easyeffects
+
+# --- productivity ---
+md.obsidian.Obsidian
+com.visualstudio.code
+com.bitwarden.desktop
+org.gnome.Calendar
+org.kde.okular
+org.kde.gwenview
+org.kde.kcalc
+
+# --- system & tooling ---
+# org.kde.konsole -- REMOVED. A Flatpak terminal gets its own /dev/pts
+# namespace, so ttyname() fails and every shell start prints a tty error.
+# Use the native terminal from the image instead (see build.sh).
+com.github.tchx84.Flatseal
+io.github.flattool.Warehouse
+com.ranfdev.DistroShelf
+org.localsend.localsend_app
+me.amankhanna.opendeck

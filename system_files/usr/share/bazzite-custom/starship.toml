@@ -1,0 +1,49 @@
+# Starship prompt, modelled on the oh-my-zsh "half-life" theme:
+#   michael in ~/Downloads  main λ
+#
+# Requires a Nerd Font in the terminal (Hack Nerd Font ships with this image).
+# Without one, the git branch glyph renders as an empty box -- replace it with
+# the word "on" in [git_branch] below.
+
+add_newline = false
+
+format = """
+$username\
+[ in ](white)\
+$directory\
+$git_branch\
+$git_status\
+$cmd_duration\
+$character"""
+
+[username]
+show_always = true
+style_user = "bold blue"
+style_root = "bold red"
+format = "[$user]($style)"
+
+[directory]
+style = "bold cyan"
+truncation_length = 3
+truncate_to_repo = false
+format = "[$path]($style)[$read_only]($read_only_style) "
+read_only = " [ro]"
+
+[git_branch]
+symbol = " "             # U+E0A0, the classic Powerline branch glyph
+style = "bold magenta"
+format = "[$symbol$branch]($style) "
+
+[git_status]
+style = "bold yellow"
+format = "([$all_status$ahead_behind]($style) )"
+
+[cmd_duration]
+min_time = 2000
+style = "bold yellow"
+format = "[took $duration]($style) "
+
+[character]
+success_symbol = "[λ](bold green)"
+error_symbol = "[λ](bold red)"
+vimcmd_symbol = "[λ](bold yellow)"
