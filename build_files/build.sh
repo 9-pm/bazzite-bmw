@@ -1,27 +1,96 @@
 #!/bin/bash
-
 set -ouex pipefail
 
-# Copy the contents of system_files/ of the git repo to /
+# ---------------------------------------------------------------------------
+# Custom Bazzite image – build script
+#
+# This runs INSIDE the container build on GitHub Actions, not on a live system.
+# The repository contents are mounted at /ctx.
+# ---------------------------------------------------------------------------
+
+# Copy everything from system_files/ into the image root.
 cp -avf "/ctx/system_files"/. /
 
-### Install packages
-
-# Packages can be installed from any enabled yum repo on the image.
-# RPMfusion repos are available by default in ublue main images
-# List of rpmfusion packages can be found here:
-# https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/43/x86_64/repoview/index.html&protocol=https&redirect=1
-
-# this installs a package from fedora repos
-dnf5 install -y tmux
-
-# Use a COPR Example:
+# ---------------------------------------------------------------------------
+# 1) RPM packages (Fedora repos + RPM Fusion, both enabled on ublue images)
 #
-# dnf5 -y copr enable ublue-os/staging
-# dnf5 -y install package
-# Disable COPRs so they don't end up enabled on the final image:
-# dnf5 -y copr disable ublue-os/staging
+#    IMPORTANT: only put things here that genuinely belong in the OS layer.
+#    GUI applications should be Flatpaks (see flatpaks.list) or Homebrew/
+#    distrobox, so the image stays small and updates stay fast.
+# ---------------------------------------------------------------------------
+RPM_PACKAGES=(
+  # (coolercontrol and liquidctl are NOT here -- they need the Terra repo,
+  #  see the separate block below.)
+  # --- shell & CLI ---
+  git
+  ddrescue
+  # zsh -- dropped on purpose, replaced by bash + starship below
+  starship
+  eza
+  zoxide
+  fzf
+  # --- media ---
+  mkvtoolnix
+  # --- gaming / memory tools ---
+  scanmem
+  gameconqueror
+  # --- session ---
+  numlockx
+)
 
-#### Example for enabling a System Unit File
+dnf5 install -y "${RPM_PACKAGES[@]}"
 
-systemctl enable podman.socket
+# NOTE: all of the above were verified as layered on the target machine, so they
+# resolve from the repos that Bazzite enables by default. If the build fails on
+# one of them, find out which repo it came from by running this on the machine:
+#   dnf5 repoquery --qf '%{name}  ->  %{repoid}\n' <package>
+# and enable that repo below before installing.
+
+# ---------------------------------------------------------------------------
+# 2) Packages from COPR repositories
+#    Always disable the COPR again afterwards, otherwise it stays enabled on
+#    the installed system and can break future rebases.
+# ---------------------------------------------------------------------------
+
+# --- Terra repository -------------------------------------------------------
+# coolercontrol and liquidctl live in Terra, which Bazzite ships DISABLED.
+# This mirrors exactly what `ujust install-coolercontrol` does, except that we
+# switch the repo off again so the finished image stays as Bazzite intends it.
+TERRA_REPO="/etc/yum.repos.d/terra.repo"
+if [ -f "${TERRA_REPO}" ]; then
+    sed -i 's@enabled=0@enabled=1@g' "${TERRA_REPO}"
+    dnf5 install -y coolercontrol liquidctl
+    sed -i 's@enabled=1@enabled=0@g' "${TERRA_REPO}"
+else
+    echo "ERROR: ${TERRA_REPO} not found in the base image." >&2
+    exit 1
+fi
+
+# (No COPR needed. Both Nerd Fonts ship as files under
+#  system_files/usr/share/fonts/ and are registered below.)
+
+# Register the fonts copied in from system_files/.
+fc-cache --force --system-only
+
+# ---------------------------------------------------------------------------
+# 3) Packages to remove from the base image
+# ---------------------------------------------------------------------------
+# dnf5 remove -y <package>
+
+# ---------------------------------------------------------------------------
+# 4) Enable systemd units shipped via system_files/
+# ---------------------------------------------------------------------------
+systemctl enable bazzite-custom-flatpaks.service
+
+# CoolerControl daemon. Its RPM preset is "disabled"; on the running machine it
+# was explicitly enabled, so we reproduce that here.
+systemctl enable coolercontrold.service
+
+# Sunshine autostart. --global enables a user unit for every user, so it does
+# not depend on anything in /home and survives a reinstall.
+systemctl --global enable app-dev.lizardbyte.app.Sunshine.service
+
+# ---------------------------------------------------------------------------
+# 5) Cleanup
+# ---------------------------------------------------------------------------
+dnf5 clean all
