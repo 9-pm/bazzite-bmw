@@ -24,11 +24,11 @@ RPM_PACKAGES=(
   # --- shell & CLI ---
   git
   ddrescue
-  # zsh -- dropped on purpose, replaced by bash + starship below
-  starship
   eza
   zoxide
-  fzf
+  # zsh    -- dropped on purpose, replaced by bash + starship (COPR, see below)
+  # starship -- not packaged in Fedora, comes from a COPR below
+  # fzf    -- already part of the Bazzite base image
   # --- media ---
   mkvtoolnix
   # --- gaming / memory tools ---
@@ -51,6 +51,13 @@ dnf5 install -y "${RPM_PACKAGES[@]}"
 #    Always disable the COPR again afterwards, otherwise it stays enabled on
 #    the installed system and can break future rebases.
 # ---------------------------------------------------------------------------
+
+# --- starship ---------------------------------------------------------------
+# Not packaged in Fedora. The source recommended by the starship project for
+# Fedora is the atim COPR.
+dnf5 -y copr enable atim/starship
+dnf5 -y install starship
+dnf5 -y copr disable atim/starship
 
 # --- Terra repository -------------------------------------------------------
 # coolercontrol and liquidctl live in Terra, which Bazzite ships DISABLED.
